@@ -1,8 +1,14 @@
 #include <vector>
 #include <iostream>
+#include <assert.h>
 #include <algorithm>    // swap (to fix error: call to 'swap' is ambiguous
 using namespace std;    // if we want to redefine that built-in function)
 
+/**
+ * @brief display a vector/array
+ * @tparam T element type
+ * @param v vector
+ */
 template <typename T>
 void disp(const vector<T> &v)
 {
@@ -11,29 +17,52 @@ void disp(const vector<T> &v)
     cout << endl;
 }
 
-template <typename T>
-int secondMin(const vector<T> &a)
-{
-    T m1, m2;
-    m1 = m2 = a[0];
-    for (int i = 1; i < a.size(); i++)
-    {
-        if (a[i] < m1)
-        {
-            m2 = m1;
-            m1 = a[i];
-        } else if (a[i] < m2)
-            m2 = a[i];
-        }
-    return m2;
-}
-
+/**
+ * @brief compare if x is not lower than y
+ * @tparam T datatype
+ * @param x - fisrt element
+ * @param y - second element
+ * @return true/false 
+ */
 template <typename T>
 bool cmp(const T& x, const T& y)
 {
-    return x >= y;
+    return x > y;
 }
 
+/**
+ * @brief find the second minimum of array
+ * @tparam T element type
+ * @param a array
+ * @return T - the second minimum 
+ */
+template <typename T>
+T secondMin(const vector<T> &a)
+{
+    assert(a.size() >= 2);
+    T m1 = a[0], m2 = a[1];
+    if (cmp<T>(m1, m2))
+        swap(m1, m2);
+        
+    for (int i = 2; i < a.size(); i++)
+    {
+        if (cmp<T>(m1, a[i]))
+        {
+            m2 = m1;
+            m1 = a[i];
+        } else if (cmp<T>(m2, a[i]))
+            m2 = a[i];
+    }
+    
+    return m2;
+}
+
+/**
+ * @brief argsort by idea of insertion sort
+ * @tparam T element type
+ * @param a vector/array
+ * @return vector<int> - vector of index by ascending it's value
+ */
 template <typename T>
 vector<int> asort(const vector<T> &a)
 {
@@ -55,6 +84,15 @@ vector<int> asort(const vector<T> &a)
     return v;
 }
 
+/**
+ * @brief partite an array into 2 parts in comparison to pivot value
+ * @tparam T element type
+ * @param idx list of indexes
+ * @param a map-array to get value by list idx 
+ * @param lhs left border position
+ * @param rhs right border position
+ * @return int - pivot position
+ */
 template <typename T>
 int partition(vector<int> &idx, const vector<T> &a, int lhs, int rhs)
 {
@@ -73,6 +111,14 @@ int partition(vector<int> &idx, const vector<T> &a, int lhs, int rhs)
     return i + 1;
 }
 
+/**
+ * @brief quicksort algorithm
+ * @tparam T element type
+ * @param idx list of indexes
+ * @param a map-array to get value by list idx
+ * @param lhs left border position
+ * @param rhs right border position
+ */
 template <typename T>
 void quicksort(vector<int> &idx, const vector<T> &a, int lhs, int rhs)
 {
@@ -84,6 +130,12 @@ void quicksort(vector<int> &idx, const vector<T> &a, int lhs, int rhs)
     }
 }
 
+/**
+ * @brief argsort by idea of quick sort
+ * @tparam T element type
+ * @param a vector/array
+ * @return vector<int> - vector of index by ascending it's value
+ */
 template <typename T>
 vector<int> bsort(const vector<T> &a)
 {
