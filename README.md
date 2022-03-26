@@ -7,3 +7,4 @@ Some projects for cpp beginner
 |02|Prime number identification|
 |03|N-th extremum: argsort()|
 |04|Namespace and knight movement|
+|05|Extract word by word from stdin|
