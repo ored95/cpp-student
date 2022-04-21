@@ -1,32 +1,34 @@
 #include <iostream>
-#include <sstream>
+#include <fstream>
+// #include <string>
 using namespace std;
 
 struct date {
-    int day;
-    int month;
-    int year;
-    bool valid;
-    // date format: xx.xx.xxxx
-    date(string s) {
-        try {
-            int d = ( s[0] - '0' ) * 10 + ( s[1] - '0' );
-            int m = ( s[3] - '0' ) * 10 + ( s[4] - '0' );
-            int y = ( s[6] - '0');
-            for (int i = 7; i <= 9; i++)
-                y = y * 10 + ( s[i] - '0' );
-            if ( isValid(d, m, y) ) {
-                day = d;
-                month = m; 
-                year = y;
-            }
-        } catch (exception& ex) {
-            cout << "Error on parsing datetime: " << ex.what() << endl;
-        }
+    int d;  // day
+    int m;  // month
+    int y;  // year
+    bool valid; // valid datetime
+    date(const date& date) {
+        d = date.d;
+        m = date.m;
+        y = date.y;
+        valid = date.valid;
     }
-    // check valid datetime
-    bool isValid(int d, int m, int y)
+    date(string s) {
+        valid = isValid(s);
+    }
+    // check valid datetime format xx.xx.xxxx
+    bool isValid(string s)
     {
+        if (s.length() != 10 && s[2] != '.' && s[5] != '.')
+            return false;
+        
+        d = ( s[0] - '0' ) * 10 + ( s[1] - '0' );
+        m = ( s[3] - '0' ) * 10 + ( s[4] - '0' );
+        y = ( s[6] - '0');
+        for (int i = 7; i <= 9; i++)
+            y = y * 10 + ( s[i] - '0' );
+        
         if (y >= 1000 && y <= 2022)
         {
             // check leap year
@@ -41,24 +43,26 @@ struct date {
         return false;
     }
     // date to string
-    void str() {
-        string fmt = "";
-        fmt += (day < 10)? "0%d." : "%2d.";
-        fmt += (month < 10)? "0%d." : "%2d.";
-        fmt += "%4d";
-        printf(fmt.c_str(), day, month, year);
+    string str() {
+        string fmt = (d < 10)? "0" : "";
+        fmt += to_string(d);
+        fmt += (m < 10)? ".0" : ".";
+        fmt += to_string(m) + "." + to_string(y);
+        return fmt;
     }
 };
 
-struct book {
-    int id;
-    string title;
-    
-};
-
 int main() {
-    string s = "12.12.2995";
-    date d(s);
-    cout << d.isValid(s).str();
+    ifstream fin ( "book.in" );
+    int n;
+    fin >> n;
+    while (n--) {
+        string s;
+        fin >> s;
+        date d(s);
+        if (d.valid)
+            cout << d.str() << endl;
+    }
+    fin.close();
     return 0;   
 }
