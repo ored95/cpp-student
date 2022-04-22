@@ -53,15 +53,18 @@ struct date {
         }
         return false;
     }
-    bool operator<(const date& other) {
+    bool operator<(const date& other) const {
         return  ( y < other.y ) || 
                 ( y == other.y && m < other.m ) || 
                 ( y == other.y && m == other.m && d < other.d );
     }
-    bool operator>(const date& other) {
+    bool operator>(const date& other) const {
         return  ( y > other.y ) || 
                 ( y == other.y && m > other.m ) || 
                 ( y == other.y && m == other.m && d > other.d );
+    }
+    bool operator==(const date& other) const {
+        return ( y == other.y ) && ( m == other.m ) && ( d == other.d );
     }
     // date to string
     string str() {
@@ -84,7 +87,16 @@ struct book {
         title(_title), author(_author), category(_category), releaseDate(_date), page(_page) {}
     book(const book &other): 
         title(other.title), author(other.author), category(other.category), releaseDate(other.releaseDate), page(other.page) {}
-
+    book& operator=(const book &other) {
+        if (this != &other) {
+            title = other.title;
+            author = other.author;
+            category = other.category;
+            releaseDate = other.releaseDate;
+            page = other.page;
+        }
+        return *this;
+    }
     // priority: 0 - title, 1 - author, 2 - category, 3 - releaseDate, 4 - page
     bool less(const book &other, int priority) {
         bool cmp;
@@ -107,6 +119,13 @@ struct book {
             break;
         }
         return cmp;
+    }
+    bool equal(const book &other, int priority) {
+        return  ( title.compare(other.title) == 0 ) && 
+                ( author.compare(other.author) == 0 ) && 
+                ( category.compare(other.category) == 0 ) &&
+                ( releaseDate == other.releaseDate ) &&
+                ( page == other.page );
     }
 };
 
@@ -149,9 +168,30 @@ struct books
         advance(it, id-1);
         lst.erase(it);
     }
-    // insertsion sort
-    void sort() {
-        // TODO
+    // quick sort implementation
+    int partition(int start, int end, const int priority, const int second_priority) {
+        int pivot = end;
+        int j = start;
+        for (int i = start; i < end; i++) {
+            if (( lst[i].less(lst[pivot], priority) ) || 
+                ( lst[i].equal(lst[pivot], priority) && lst[i].less(lst[pivot], second_priority) )) {
+                swap(lst[i], lst[j]);
+                j++;
+            }
+        }
+        swap(lst[j], lst[pivot]);
+        return j;
+    }
+    void quicksort(int start, int end, const int priority, const int second_priority) {
+        if (start < end) {
+            int mid = partition(start, end, priority, second_priority);
+            quicksort(start, mid-1, priority, second_priority);
+            quicksort(mid+1, end, priority, second_priority);
+        }
+    }
+    void sort(int priority) {
+        int second_priority = (priority == 3)? 0: 3;    // default by datetime and alphabet
+        quicksort(0, lst.size()-1, priority, second_priority);
     }
     void disp() {
         for (int i = 0; i < 85; i++) cout << "-";
@@ -169,7 +209,7 @@ struct books
     }
 };
 
-bool process(books &bks) {
+void menu() {
     cout << endl << "***** Menu *****" << endl;
     cout << "1. Add a book" << endl;
     cout << "2. Update a book" << endl;
@@ -180,98 +220,131 @@ bool process(books &bks) {
     cout << "7. Restore to default books list" << endl;
     cout << "[0ther]. Exit program" << endl;
     cout << "Choose an option -> ";
-    int choice; cin >> choice;
-    if (choice == 1) {
-        string _title, _author, _category, tmp;
-        cout << "Enter a book detail:" << endl;
-        cout << "Title: "; cin >> _title;  // getline(cin, _title);
-        cout << "Author: "; cin >> _author;  //getline(cin, _author);
-        cout << "Category: "; cin >> _category;  //getline(cin, _category);
-        cout << "Release date (as XX.XX.XXXX): "; cin >> tmp;  //getline(cin, tmp);
+}
+
+void add_job(books &bks) {
+    string _title, _author, _category, tmp;
+    cout << "Enter a book detail:" << endl;
+    cout << "Title: "; cin >> _title;  // getline(cin, _title);
+    cout << "Author: "; cin >> _author;  //getline(cin, _author);
+    cout << "Category: "; cin >> _category;  //getline(cin, _category);
+    cout << "Release date (as XX.XX.XXXX): "; cin >> tmp;  //getline(cin, tmp);
+    date _date(tmp);
+    if (_date.valid) {
+        int page; 
+        cout << "Total pages: "; cin >> page;
+        if (page > 0) {
+            book b(_title, _author, _category, _date, page);
+            bks.push_book(b);
+            cout << "A new book is added successfully." << endl;
+        } else {
+            cout << "Error: Invalid number of page. Add a book failed!" << endl;
+        }
+    } else {
+        cout << "Error: Invalid datetime format. Add a book failed!" << endl;
+    }
+}
+
+void update_job(books& bks) {
+    cout << "Which book do you want to update [1-" << bks.size() << "]? ";
+    int id; cin >> id;
+    if (id >= 1 && id <= bks.size()) {
+        // just allow update release date only
+        string tmp; cout << "Enter release date (as XX.XX.XXXX): "; cin >> tmp;  //getline(cin, tmp);
         date _date(tmp);
         if (_date.valid) {
-            int page; 
-            cout << "Total pages: "; cin >> page;
-            if (page > 0) {
-                book b(_title, _author, _category, _date, page);
-                bks.push_book(b);
-                cout << "A new book is added successfully." << endl;
-            } else {
-                cout << "Error: Invalid number of page. Add a book failed!" << endl;
-            }
+            bks.lst[id-1].releaseDate = _date;
+            cout << "Result: update book details successfully" << endl;
         } else {
-            cout << "Error: Invalid datetime format. Add a book failed!" << endl;
+            cout << "Error: Invalid datetime format. Update a book failed!" << endl;
         }
-    } else if (choice == 2) {
-        cout << "Which book do you want to update [1-" << bks.size() << "]? ";
-        int id; cin >> id;
-        if (id >= 1 && id <= bks.size()) {
-            // just allow update release date only
-            string tmp; cout << "Enter release date (as XX.XX.XXXX): "; cin >> tmp;  //getline(cin, tmp);
-            date _date(tmp);
-            if (_date.valid) {
-                bks.lst[id-1].releaseDate = _date;
-                cout << "Result: update book details successfully" << endl;
-            } else {
-                cout << "Error: Invalid datetime format. Update a book failed!" << endl;
-            }
-        } else {
-            cout << "Error: Invalid book ID";
-        }
-    } else if (choice == 3) {
-        cout << "Which book do you want to remove [1-" << bks.size() << "]? ";
-        int id; cin >> id;
-        if (id >= 1 && id <= bks.size()) {
-            bks.remove(id);
-        } else {
-            cout << "Error: Invalid book ID";
-        }
-    } else if (choice == 4) { // allow filter by category, datetime interval
-        cout << "select filter (1 - category, 2 - datetime): ";
-        int filter; cin >> filter;
-        if (filter != 2 && filter != 1) {
-            cout << "Error: Unknown filter. Searching failed!" << endl;
-        } else {
-            if (filter == 2) {
-                string start_filter, end_filter;
-                cout << "Enter release date start interval (as XX.XX.XXXX): "; cin >> start_filter;  // getline(cin, start_filter);
-                cout << "Enter release date end interval (as XX.XX.XXXX): "; cin >> end_filter;  // getline(cin, end_filter);
-                date start(start_filter), end(end_filter);
-                if (start.valid && end.valid) {
-                    for (int id = 1; id <= bks.size(); ) {
-                        if (end < bks[id].releaseDate || start > bks[id].releaseDate)
-                            bks.remove(id);
-                        else
-                            id++;
-                    }
-                } else {
-                    cout << "Error: Invalid datetime format. Searching failed!" << endl;
-                }
-            } else {    // 1
-                string category_filter; cout << "Enter a category: "; cin >> category_filter;  // getline(cin, category_filter);
+    } else {
+        cout << "Error: Invalid book ID";
+    }
+}
+
+void remove_job(books& bks) {
+    cout << "Which book do you want to remove [1-" << bks.size() << "]? ";
+    int id; cin >> id;
+    if (id >= 1 && id <= bks.size()) {
+        bks.remove(id);
+    } else {
+        cout << "Error: Invalid book ID";
+    }
+}
+
+void search_job(books& bks) {   // allow filter by category, datetime interval
+    cout << "select filter (1 - category, 2 - datetime): ";
+    int filter; cin >> filter;
+    if (filter != 2 && filter != 1) {
+        cout << "Error: Unknown filter. Searching failed!" << endl;
+    } else {
+        if (filter == 2) {
+            string start_filter, end_filter;
+            cout << "Enter release date start interval (as XX.XX.XXXX): "; cin >> start_filter;  // getline(cin, start_filter);
+            cout << "Enter release date end interval (as XX.XX.XXXX): "; cin >> end_filter;  // getline(cin, end_filter);
+            date start(start_filter), end(end_filter);
+            if (start.valid && end.valid) {
                 for (int id = 1; id <= bks.size(); ) {
-                    if (bks[id].category.compare(category_filter) != 0)
+                    if (end < bks[id].releaseDate || bks[id].releaseDate < start)
                         bks.remove(id);
                     else
                         id++;
-                    bks.disp();
                 }
-            }
-            if (bks.size() == 0) {
-                cout << "Result: No books found." << endl;
-                bks._default();     // restore to default  
             } else {
-                cout << "Result: " << bks.size() << " book(s) found." << endl;
-                bks.disp();
+                cout << "Error: Invalid datetime format. Searching failed!" << endl;
+            }
+        } else {    // 1
+            string category_filter; cout << "Enter a category: "; cin >> category_filter;  // getline(cin, category_filter);
+            for (int id = 1; id <= bks.size(); ) {
+                if (bks[id].category.compare(category_filter) != 0)
+                    bks.remove(id);
+                else
+                    id++;
             }
         }
-    } else if (choice == 5) {
-        // sort
-    } else if (choice == 6) {
+        if (bks.size() == 0) {
+            cout << "Result: No books found." << endl;
+            bks._default();     // restore to default  
+        } else {
+            cout << "Result: " << bks.size() << " book(s) found." << endl;
+            bks.disp();
+        }
+    }
+}
+
+void sort_job(books& bks) {
+    cout << "Enter primary priority (0 - title, 1 - author, 2 - category, 3 - release date, 4 - page): ";
+    int priority; cin >> priority;
+    if (priority >= 0 && priority <= 4) {
+        cout << "Result: Book is sorted successfully." << endl;
+        bks.sort(priority);
         bks.disp();
-    } else if (choice == 7) {
+    } else {
+        cout << "Error: Invalid priority. Sort failed!" << endl;
+    }
+}
+
+bool process(books &bks) {
+    menu();    
+    int choice; cin >> choice;
+    switch (choice) {
+    case 1: 
+        add_job(bks); break;
+    case 2:
+        update_job(bks); break;
+    case 3:
+        remove_job(bks); break;
+    case 4: 
+        search_job(bks); break;
+    case 5:
+        sort_job(bks); break;
+    case 6:
+        bks.disp(); break;
+    case 7:
         bks._default();
         cout << "Result: Books list is restored to default" << endl;
+        break;
     }
     return 1 <= choice && choice <= 7;
 }
@@ -281,6 +354,5 @@ int main() {
     tmp._default();
     tmp.disp();
     while (process(tmp));
-
     return 0;
 }
