@@ -8,3 +8,4 @@ Some projects for cpp beginner
 |03|N-th extremum: argsort()|
 |04|Namespace and knight movement|
 |05|Extract word by word from stdin|
+|06|Multitasks with list books using struct|
