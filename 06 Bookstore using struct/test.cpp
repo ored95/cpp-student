@@ -121,11 +121,26 @@ struct book {
         return cmp;
     }
     bool equal(const book &other, int priority) {
-        return  ( title.compare(other.title) == 0 ) && 
-                ( author.compare(other.author) == 0 ) && 
-                ( category.compare(other.category) == 0 ) &&
-                ( releaseDate == other.releaseDate ) &&
-                ( page == other.page );
+        bool cmp;
+        switch (priority)
+        {
+        case 0:
+            cmp = title.compare(other.title) == 0;
+            break;
+        case 1:
+            cmp = author.compare(other.author) == 0;
+            break;
+        case 2:
+            cmp = category.compare(other.category) == 0;
+            break;
+        case 3:
+            cmp = releaseDate == other.releaseDate;
+            break;
+        default:    // priority = 4
+            cmp = page == other.page;
+            break;
+        }
+        return cmp;
     }
 };
 
