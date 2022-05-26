@@ -10,3 +10,4 @@ Some projects for cpp beginner
 |05|Extract word by word from stdin|
 |06|Multitasks with list books using struct|
 |07|Total working days between two dates|
+|08|Word frequency|
